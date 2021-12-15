@@ -1,0 +1,12 @@
+name: 'print'
+description: 'print'
+inputs:
+    project:
+        description: "project"
+        required: true
+runs:
+    using: composite
+    steps:
+        - name: print
+          run: echo print::${{ inputs.project }}
+          shell: bash

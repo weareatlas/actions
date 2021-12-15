@@ -1,0 +1,50 @@
+name: test
+on:
+  workflow_dispatch:
+  push:
+jobs:
+  affected:
+    name: affected / test
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: affected
+        run: |
+          echo "::set-output name=projects::app1 app2 app3"
+      - id: set-matrix
+        run: |
+          PROJECT=\'${AFFECTED//" "/"', '"}\'
+          echo "::set-output name=matrix::{project:[$PROJECT]}"
+        env:
+          AFFECTED: ${{ steps.affected.outputs.projects }}
+  build:
+    needs: affected
+    name: affected / build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{fromJson(needs.affected.outputs.matrix)}}
+    outputs:
+      matrix: ${{needs.affected.outputs.matrix}}
+    steps:
+      - name: print
+        uses: weareatlas/actions/print@master
+        with:
+          project: ${{ matrix.project }}
+  publish:
+    needs: [build]
+    name: affected / publish
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{fromJson(needs.build.outputs.matrix)}}
+    steps:
+      - name: print
+        uses: weareatlas/actions/print@master
+        with:
+          project: ${{ matrix.project }}
+  release:
+    needs: [publish]
+    runs-on: ubuntu-latest
+    steps:
+      - name: print
+        run: echo release
